@@ -1,5 +1,5 @@
 /*
-  Öoo Autosplitter v0.4 - created by asheevee_
+  Öoo Autosplitter v0.4.1 - created by asheevee_
   Based heavily off of the UNDERTALE Autosplitter by spaceglace, antimYT, Xargot, LukeSaward, deesoff, HFK, and NERS
 */
 
@@ -282,14 +282,15 @@ update
         vars.log("PHASE  " + old.phase.ToString() + " -> " + current.phase.ToString());
   }
   
+  // Round here to resolve float imprecision nonsense
   current.screen_x = Math.Round(current.camera_xpos / 320);
   current.screen_y = Math.Round(current.camera_ypos / 240);
   
   // Has the bird opening mouth cutscene started playing? (camera moves to [1,0] but player does not)
-  if(current.screen_x == 1 && current.screen_y == 0 && current.player_ypos >= 7440 && !vars.heartBreakCutscene)
+  if(current.screen_x == 1 && current.screen_y == 0 && current.player_ypos >= 240 && !vars.heartBreakCutscene)
     vars.heartBreakCutscene = true;
   // Has said cutscene finished playing? (camera moves back to player)
-  if(vars.heartBreakCutscene && current.screen_y == 31 && !vars.heartBreak)
+  if(vars.heartBreakCutscene && current.screen_y > 0 && !vars.heartBreak)
     vars.heartBreak = true;
   
   //vars.log("INFO xpos " + current.player_xpos.ToString());
@@ -308,8 +309,8 @@ start
 
 reset
 {
-  // checking for the camera position here ensures resets don't happen if the game closes for some other reason, e.g. a random crash
-  if(current.igt == 0 && current.player_xpos == 0 && current.screen_x == 22 && current.screen_y == 21) {
+  // no longer need to check position/screen since runs must be one continuous stream of gameplay
+  if(current.igt == 0 && old.igt > 0) {
     vars.log("EVENT reset");
     return true;
   }
@@ -344,12 +345,12 @@ split
             break;
             
           case 2: // w-bomb1
-            pass = (current.window_title == "Öo");
+            pass = (old.window_title == "Ö" && current.window_title == "Öo");
             break;
           
           // the statue rooms listed don't play the jingle immediately upon entering, use player position to check if they've collided with that trigger
           case 3: // r-statue-00-01
-            pass = (current.player_xpos <= 283); //11 pixel offset from the trigger (explained below)
+            pass = (current.player_xpos <= 282); //10 pixel offset from the trigger (explained below)
             break;
           
           case 4: // r-statue-00-06
@@ -357,7 +358,7 @@ split
             break;
           
           case 5: // w-bomb2
-            pass = (current.window_title == "Öoo");
+            pass = (old.window_title == "Öo" && current.window_title == "Öoo");
             break;
           
           case 6: // r-statue-18-13
@@ -369,9 +370,9 @@ split
             break;
             
           // igt stops when the player collides with a trigger at x=288
-          // exact hitboxes vary depending on animation, but it looks like the vast majority of the time, 11 pixels is the proper offset (x<=299)
+          // exact hitboxes vary depending on animation, but it looks like the vast majority of the time, 10 pixels is the proper offset (x<=298)
           case 8: // s-end
-            pass = (current.player_xpos <= 299);
+            pass = (current.player_xpos <= 298);
             break;
         }
         
