@@ -1,5 +1,5 @@
 /*
-  Öoo Autosplitter v0.4.1 - created by asheevee_
+  Öoo Autosplitter v0.4.2 - created by asheevee_
   Based heavily off of the UNDERTALE Autosplitter by spaceglace, antimYT, Xargot, LukeSaward, deesoff, HFK, and NERS
 */
 
@@ -286,12 +286,16 @@ update
   current.screen_x = Math.Round(current.camera_xpos / 320);
   current.screen_y = Math.Round(current.camera_ypos / 240);
   
-  // Has the bird opening mouth cutscene started playing? (camera moves to [1,0] but player does not)
-  if(current.screen_x == 1 && current.screen_y == 0 && current.player_ypos >= 240 && !vars.heartBreakCutscene)
+  // Has the bird opening mouth cutscene started playing? (camera moves to [1,0] but player does not, excluding 5216 makes sure it doesn't trigger during the intro)
+  if(current.screen_x == 1 && current.screen_y == 0 && current.player_ypos >= 240 && current.player_ypos != 5216 && !vars.heartBreakCutscene) {
     vars.heartBreakCutscene = true;
+    vars.log("INFO heartBreakCutscene: screen_x " + current.screen_x + " screen_y " + current.screen_y + " player_ypos " + current.player_ypos);
+  }
   // Has said cutscene finished playing? (camera moves back to player)
-  if(vars.heartBreakCutscene && current.screen_y > 0 && !vars.heartBreak)
+  if(vars.heartBreakCutscene && current.screen_y > 0 && !vars.heartBreak) {
     vars.heartBreak = true;
+    vars.log("INFO heartBreak: screen_x " + current.screen_x + " screen_y " + current.screen_y + " player_ypos " + current.player_ypos);
+  }
   
   //vars.log("INFO xpos " + current.player_xpos.ToString());
   
