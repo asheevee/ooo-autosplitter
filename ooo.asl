@@ -1,20 +1,33 @@
 /*
-  Öoo Autosplitter v0.4.2 - created by asheevee_
+  Öoo Autosplitter v0.5 - created by asheevee_
   Based heavily off of the UNDERTALE Autosplitter by spaceglace, antimYT, Xargot, LukeSaward, deesoff, HFK, and NERS
 */
 
-state ("Ooo")
+state ("Ooo", "v1.0.8") // all versions before v1.0.13 work with these pointers
 {
   string8 window_title : "Ooo.exe", 0xDCBD38, 0x0; // changes with the number of bombs you have!! really cute
   ulong igt : "Ooo.exe", 0xBAD6F0, 0x48, 0x10, 0x10, 0x440;
   double player_xpos : "Ooo.exe", 0xDBD138, 0x18, 0x20, 0x48, 0x10, 0xF20, 0x0;
   double player_ypos : "Ooo.exe", 0xDBD138, 0x18, 0x20, 0x48, 0x10, 0xF30, 0x0;
-  double camera_xpos : "Ooo.exe", 0xB7DE30, 0x8F0, 0xB0, 0x48, 0x10, 0x10, 0x0;
-  double camera_ypos : "Ooo.exe", 0xB7DE30, 0x8F0, 0xB0, 0x48, 0x10, 0x20, 0x0;
+  double camera_xpos : "Ooo.exe", 0xBAE7D0, 0x270, 0x18, 0x1B0, 0x48, 0x10, 0x10, 0x0;
+  double camera_ypos : "Ooo.exe", 0xBAE7D0, 0x270, 0x18, 0x1B0, 0x48, 0x10, 0x20, 0x0;
+}
+
+state ("Ooo", "v1.0.13")
+{
+  string8 window_title : "Ooo.exe", 0xDCBD38, 0x0;
+  ulong igt : "Ooo.exe", 0xBAD6F0, 0x48, 0x10, 0x50, 0x4C0;
+  double player_xpos : "Ooo.exe", 0xDBD138, 0x18, 0x20, 0x48, 0x10, 0xF30, 0x0;
+  double player_ypos : "Ooo.exe", 0xDBD138, 0x18, 0x20, 0x48, 0x10, 0xF50, 0x0;
+  double camera_xpos : "Ooo.exe", 0xBAE7D0, 0x270, 0x18, 0x1B0, 0x48, 0x10, 0x10, 0x0;
+  double camera_ypos : "Ooo.exe", 0xBAE7D0, 0x270, 0x18, 0x1B0, 0x48, 0x10, 0x20, 0x0;
 }
 
 startup
 {
+  
+  vars.unknownPopup = false;
+  
   settings.Add("area1", true, "Area 1");
   settings.Add("area2", true, "Area 2");
   settings.Add("area3", true, "Area 3");
@@ -112,9 +125,9 @@ startup
   settings.Add("s-heart", false, "Destroy the Heart", "heart");
   
   settings.Add("r-warp-18-08-heart", false, "Enter the warp room at [18,08] after destroying the Heart", "escape");
-  settings.Add("r-arealast", false, "Re-enter Area 1 after destroying the Heart", "escape");
+  settings.Add("r-arealast", true, "Re-enter Area 1 after destroying the Heart", "escape");
   settings.Add("r-warp-16-06-heart", false, "Enter the warp room at [16,06] after destroying the Heart", "escape");
-  settings.Add("r-warp-08-03", true, "Enter the warp room at [08,03]", "escape");
+  settings.Add("r-warp-08-03", false, "Enter the warp room at [08,03]", "escape");
   settings.Add("r-warp-04-02", false, "Enter the warp room at [04,02]", "escape");
   settings.Add("r-warp-02-02", false, "Enter the warp room at [02,02]", "escape");
   settings.Add("s-end", true, "Ending", "escape");
@@ -252,8 +265,45 @@ init
   vars.heartBreakCutscene = false;
   vars.heartBreak = false;
   
-  // todo: support future versions if/when they release (so far all pointers have worked for all versions)
-  // todo: support non-windows and itch releases, if those have different pointers
+  var module = modules.First();
+  
+  string hash;
+  using(var md5 = System.Security.Cryptography.MD5.Create())
+    using(var fs = File.OpenRead(new FileInfo(module.FileName).DirectoryName + @"\data.win")) 
+      hash = string.Concat(md5.ComputeHash(fs).Select(b => b.ToString("X2")));
+  
+  vars.log("Version Hash: " + hash);
+  switch(hash) {
+    case "32E4F81F113CADF326A05DE251D9E86A": // v1.0.8 (launch)
+    case "183EBF33663177BC2BBC6A2A17B3498E": // v1.0.9
+    case "1C9A20917C0979AA2255DD9F95B70270": // v1.0.10
+    case "FCF31D01C4650B72A0925444C62A51D7": // v1.0.11
+    case "F43213F2CDC2DD868D548C643848D628": // v1.0.12
+      version = "v1.0.8";
+      break;
+      
+    case "5F9E70DE9E906A69D1753C7464F2CF4B": // v1.0.13
+      version = "v1.0.13";
+      break;
+  }
+  
+  if(String.IsNullOrEmpty(version) && !vars.unknownPopup) {
+    version = "Unknown";
+    vars.unknownPopup = true;
+    
+    MessageBox.Show
+    (
+      "This version of Öoo is not supported by the autosplitter.\n" +
+      "If you are playing an older version, update your game.\n" +
+      "If you are playing with any mods installed, switch to the vanilla game.\n\n" +
+      
+      "Make sure the game's executable is named \"Ooo.exe\" and the data file is named \"data.win\".\n\n" +
+      
+      "You will not be notified again until the next time you start the autosplitter.",
+      
+      "LiveSplit | Öoo", MessageBoxButtons.OK, MessageBoxIcon.Warning
+    );
+  }
 }
 
 update
@@ -296,16 +346,12 @@ update
     vars.heartBreak = true;
     vars.log("INFO heartBreak: screen_x " + current.screen_x + " screen_y " + current.screen_y + " player_ypos " + current.player_ypos);
   }
-  
-  //vars.log("INFO xpos " + current.player_xpos.ToString());
-  
-  // todo: track map completion?
 }
 
 start
 {
-  // player instance is created the moment time starts (position is read as 0 before then)
-  if(old.igt == 0 && current.player_xpos != 0) {
+  // player instance is created the moment time starts (position is read as either 0 or a very small number before then)
+  if(old.igt == 0 && current.player_xpos > 1) {
     vars.log("EVENT start");
     return true;
   }
@@ -313,7 +359,7 @@ start
 
 reset
 {
-  // no longer need to check position/screen since runs must be one continuous stream of gameplay
+  // todo: support s+q
   if(current.igt == 0 && old.igt > 0) {
     vars.log("EVENT reset");
     return true;
